@@ -1,371 +1,286 @@
+# app.py
 import streamlit as st
+import re
 
-# Your provided dataset (slightly reformatted for easier parsing)
-disease_data = {
+# --- Data Structure ---
+# This dictionary holds all the information parsed from the provided text.
+yoga_data = {
     "General Health and Well-being": {
-        "Benefits": [
-            "Asanas (General): Restore and maintain physical and mental health. Bring different bodily functions into perfect coordination. Remove physical discomfort from sitting. Release mental and physical tensions or 'knots'. Release dormant energy, bringing vitality and strength to the body and making the mind light, creative, joyful, and balanced. Maintain the physical body in optimum condition and promote health.",
-            "Pawanmuktasana Series: Profound effect on the body and mind, useful for managing various disorders. Opens major joints, relaxes muscles, removes energy blockages, promotes total health, regulates and stabilizes energy flow. Relaxes mind, tunes autonomic nerves, hormonal functions, and internal organs.",
-            "Dynamic Yogasanas (e.g., Pawanmuktasana series, Surya Namaskara, Chandra Namaskara): Increase flexibility, improve circulation, tone muscles and joints, release energy blocks, remove stagnant waste, strengthen lungs, and improve digestive and excretory systems.",
-            "Static Yogasanas (Intermediate and Advanced): Gently massage internal organs, glands, and muscles, relax nerves, bring tranquillity to the mind, and prepare for higher practices of yoga, such as meditation and sense withdrawal (pratyahara).",
-            "Nadi Shodhana Pranayama: Nourishes the body with oxygen, efficiently expels carbon dioxide, purifies blood, stimulates brain centers, and increases vitality.",
-            "Shatkarmas (General): Create harmony between ida and pingala nadis, purify and balance the body physically and mentally, and balance the three doshas (kapha, pitta, vata)."
+        "Beneficial": [
+            "Asanas (General): Restore and maintain physical and mental health. Bring different bodily functions into perfect coordination.",
+            "Pawanmuktasana Series: Profound effect on the body and mind, useful for managing various disorders. Opens major joints, relaxes muscles, and removes energy blockages.",
+            "Dynamic Yogasanas (e.g., Pawanmuktasana series, Surya Namaskara): Increase flexibility, improve circulation, tone muscles, and release energy blocks.",
+            "Static Yogasanas (Intermediate and Advanced): Gently massage internal organs, relax nerves, and bring tranquillity to the mind.",
+            "Nadi Shodhana Pranayama: Nourishes the body with oxygen, purifies blood, and stimulates brain centers.",
+            "Shatkarmas (General): Create harmony, purify the body physically and mentally, and balance the three doshas (kapha, pitta, vata)."
         ],
         "Contra-indications": []
     },
-    "Abdominal Ailments (General) / Digestive Problems": {
-        "Benefits": [
-            "Pawanmuktasana Part 2 (Digestive/Abdominal Group): Excellent for indigestion, constipation, acidity, excess wind/gas, lack of appetite, diabetes, and disorders of male/female reproductive systems.",
-            "Padotthanasana (Raised Legs Pose): Strengthens abdominal muscles, massages organs, strengthens digestive system.",
-            "Supta Pawanmuktasana (Leg Lock Pose): Massages abdomen and digestive organs, effective in removing wind and constipation.",
-            "Naukasana (Boat Pose): Stimulates digestive system, tones all organs.",
-            "Nauka Sanchalanasana (Rowing the Boat): Positive effect on abdomen, removes constipation.",
-            "Udarakarshanasana (Abdominal Stretch Pose): Very useful as it alternately compresses and stretches abdominal organs and muscles, relieves constipation.",
-            "Padmasana (Lotus Pose): Redirects blood flow to the abdominal region, stimulating the digestive process.",
-            "Vajrasana (Thunderbolt Pose): Increases the efficiency of the entire digestive system, relieving stomach ailments such as hyperacidity and peptic ulcer.",
-            "Ushtrasana (Camel Pose): Beneficial for digestive system, stretches stomach and intestines, alleviating constipation.",
-            "Supta Vajrasana (Sleeping Thunderbolt Pose): Massages abdominal organs, alleviating digestive ailments and constipation.",
-            "Yogamudrasana (Psychic Union Pose): Excellent for massaging abdominal organs, removing constipation and indigestion.",
-            "Matsyasana (Fish Pose): Stretches intestines and abdominal organs, useful for all abdominal ailments. Drinking 3 glasses of water before practice helps remove constipation.",
-            "Tarasana (Sitting Spinal Twist): Massages abdominal organs.",
-            "Koormasana (Tortoise Pose): Tones all abdominal organs, helpful in managing diabetes, flatulence, and constipation.",
-            "Eka Pada Sirasana (One Foot to Head Pose): Compresses each side of the abdomen, thoroughly massaging internal organs, stimulating peristalsis, and removing constipation.",
-            "Ardha Padma Paschimottanasana (Half Lotus Back Stretching Pose): Foot of the bent leg applies intense massage to abdominal organs, stimulates intestinal peristalsis, and alleviates constipation.",
-            "Merudandasana (Spinal Column Pose): Tones abdominal organs (especially liver), strengthens abdominal muscles, stimulates intestinal peristalsis, alleviating constipation.",
-            "Dwi Hasta Bhujasana (Two Hands and Arms Pose): Massages and tones abdomen and visceral organs, stimulating pancreas.",
-            "Hamsasana (Swan Pose): Massages and stimulates abdominal organs and muscles, beneficial for a healthy digestive system.",
-            "Mayurasana (Peacock Pose): Stimulates metabolic processes, aids elimination of toxins, massages digestive organs, stimulates intestinal peristalsis, useful for flatulence, constipation, diabetes, and sluggishness of liver/kidneys.",
-            "Poorna Dhanurasana (Full Bow Pose): Reconditions alimentary canal, massages abdominal organs and muscles, tones liver, pancreas, kidneys, adrenal glands, improving digestive, excretory, and reproductive functions, helps with gastrointestinal disorders, dyspepsia, chronic constipation, sluggish liver.",
+    "Abdominal Ailments / Digestive Problems": {
+        "Beneficial": [
+            "Pawanmuktasana Part 2 (Digestive/Abdominal Group): Excellent for indigestion, constipation, acidity, excess wind/gas, and lack of appetite.",
+            "Padotthanasana (Raised Legs Pose): Strengthens abdominal muscles and the digestive system.",
+            "Supta Pawanmuktasana (Leg Lock Pose): Effective in removing wind and constipation by massaging the abdomen.",
+            "Naukasana (Boat Pose): Stimulates the digestive system and tones all organs.",
+            "Nauka Sanchalanasana (Rowing the Boat): Has a positive effect on the abdomen and removes constipation.",
+            "Udarakarshanasana (Abdominal Stretch Pose): Relieves constipation by alternately compressing and stretching abdominal organs.",
+            "Vajrasana (Thunderbolt Pose): Increases the efficiency of the entire digestive system, relieving hyperacidity and peptic ulcers.",
+            "Ushtrasana (Camel Pose): Stretches the stomach and intestines, alleviating constipation.",
+            "Supta Vajrasana (Sleeping Thunderbolt Pose): Massages abdominal organs, alleviating digestive ailments.",
+            "Yogamudrasana (Psychic Union Pose): Excellent for massaging abdominal organs and removing constipation.",
+            "Matsyasana (Fish Pose): Stretches intestines and is useful for all abdominal ailments.",
             "Ardha Matsyendrasana (Half Spinal Twist): Massages abdominal organs, alleviating digestive ailments.",
-            "Shankhaprakshalana (Cleansing of Entire Digestive Tract): Alleviates digestive problems, tones liver and other digestive organs/glands.",
-            "Laghoo Shankhaprakshalana (Short Intestinal Wash): Recommended for digestive disorders.",
-            "Vatsara Dhauti (Cleansing the Intestines with Air): Removes stale gas and wind, stimulates digestive system.",
-            "Agnisara Kriya (Activating the Digestive Fire): Stimulates appetite, improves digestion, massages abdomen, strengthens abdominal muscles, promotes optimum health of abdominal organs.",
-            "Kunjal Kriya (Vomiting Water): Tones and stimulates all abdominal organs by inducing strong muscular contractions in stomach walls.",
-            "Vyaghra Kriya (Tiger Practice): Prevents burdening intestines when excessive or rotten food has been eaten. Natural way to relieve stomach by vomiting.",
-            "Vastra Dhauti (Cloth Cleansing): Massages stomach walls.",
-            "Nauli (Abdominal Massaging): Massages and tones the entire abdominal area (muscles, nerves, intestines, reproductive, urinary and excretory organs), stimulates appetite, digestion, assimilation, absorption, and excretion.",
-            "Halasana (Plough Pose): Massages internal organs, activates digestion, relieving constipation and dyspepsia, revitalizes spleen and suprarenal glands, promotes insulin production, improves liver and kidney function."
+            "Agnisara Kriya (Activating the Digestive Fire): Stimulates appetite, improves digestion, and strengthens abdominal muscles.",
+            "Nauli (Abdominal Massaging): Massages the entire abdominal area, stimulating digestion, assimilation, and excretion.",
+            "Halasana (Plough Pose): Activates digestion, relieving constipation and dyspepsia."
         ],
         "Contra-indications": [
-            "Pawanmuktasana Part 2: Not for recent abdominal surgery.",
-            "Koormasana (Tortoise Pose): Not for hernia.",
-            "Sirsha Angustha Yogasana (Head to Toe Pose): Helps remove abdominal complaints.",
+            "Pawanmuktasana Part 2: Do not practice after recent abdominal surgery.",
+            "Koormasana (Tortoise Pose): Avoid with a hernia.",
             "Tadagi Mudra (Barrelled Abdomen Technique): Not for hernia or prolapse.",
             "Maha Mudra (Great Psychic Attitude): Not for stomach ulcers.",
-            "Maha Bheda Mudra (Great Separating Attitude): Not for colitis, stomach or intestinal ulcer, diaphragmatic hernia, or major abdominal problems.",
-            "Uddiyana Bandha (Abdominal Contraction): Not for colitis, stomach or intestinal ulcer, diaphragmatic hernia, or major abdominal problems.",
+            "Uddiyana Bandha (Abdominal Contraction): Not for colitis, stomach/intestinal ulcers, or diaphragmatic hernia.",
             "Shankhaprakshalana: Not for hernia.",
             "Agnisara Kriya: Not for acute duodenal or peptic ulcers.",
-            "Kunjal Kriya: Not for hernia, acute peptic ulcer.",
-            "Vastra Dhauti: Not for peptic ulcer, acute gastritis, or until 6 months after abdominal surgery.",
-            "Nauli: Not for abdominal pain, gallstones, acute peptic ulcer, or constipation.",
-            "Mayurasana (Peacock Pose): Not for peptic or duodenal ulcer, hernia.",
-            "Baka Dhyanasana: Aids abdominal compression.",
-            "Shirshapada Bhumi Sparshasana: Not for acid stomach."
+            "Kunjal Kriya: Not for hernia or acute peptic ulcer.",
+            "Mayurasana (Peacock Pose): Not for peptic or duodenal ulcers, or hernia."
         ]
     },
     "Acidity / Hyperacidity": {
-        "Benefits": [
+        "Beneficial": [
             "Pawanmuktasana Part 2 (Digestive/Abdominal Group): Excellent for acidity.",
             "Vajrasana (Thunderbolt Pose): Relieves hyperacidity."
         ],
         "Contra-indications": [
             "Surya Bheda Pranayama: Not for acidity.",
-            "Grivasana: Not for acid stomach.",
-            "Shirshapada Bhumi Sparshasana: Not for acid stomach."
+            "Grivasana: Not for an acid stomach.",
+            "Shirshapada Bhumi Sparshasana: Not for an acid stomach."
         ]
     },
-    "Aging Processes": {
-        "Benefits": [
-            "Maha Bandha (The Great Lock): Checks degenerative and aging processes, rejuvenates every cell of the body.",
-            "Vrischikasana (Scorpion Pose): Reorganizes prana, arresting the physical aging process."
-        ],
-        "Contra-indications": []
-    },
-    "Anxiety / Stress / Mental Tension / Neuroses / Depression": {
-        "Benefits": [
-            "Yoga (General): Presents a proven method for coping with life. Removes mental tensions by dealing with them on a physical level. Yogic practices make great personal and even business sense in an increasingly stressful society.",
-            "Naukasana (Boat Pose): Useful for eliminating nervous tension and bringing about deep relaxation.",
+    "Anxiety / Stress / Mental Tension": {
+        "Beneficial": [
+            "Naukasana (Boat Pose): Useful for eliminating nervous tension and bringing deep relaxation.",
             "Gomukhasana (Cow's Face Pose): Alleviates tiredness, tension, and anxiety.",
-            "Koormasana (Tortoise Pose): Induces mental relaxation, composure, inner security, and surrender. Passion, fear, and anger subside, and the body and mind are refreshed.",
-            "Sheetali Pranayama (Cooling Breath): Cools and reduces mental and emotional excitation, induces muscular relaxation and mental tranquillity, may be used as a tranquilizer before sleep.",
-            "Sheetkari Pranayama (Hissing Breath): Soothes mental tensions.",
-            "Bhramari Pranayama (Humming Bee Breath): Calms the mind and soothes the nervous system, has a profoundly relaxing effect at the psychic level.",
-            "Surya Bheda Pranayama (Vitality Stimulating Breath): Helps to alleviate depression.",
-            "Moorchha Pranayama (Swooning or Fainting Breath): Helps alleviate tension, anxiety, anger, and neuroses, brings mental tranquillity.",
-            "Jala Neti (Nasal Cleansing with Water): Calming and soothing influence on the brain, alleviates anxiety, anger, and depression.",
-            "Jalandhara Bandha (Throat Lock): Produces mental relaxation, relieving stress, anxiety, and anger.",
-            "Moola Bandha (Perineum Contraction): Relieves depression and promotes good health.",
-            "Uddiyana Bandha (Abdominal Contraction): Soothes anxiety and tension.",
+            "Koormasana (Tortoise Pose): Induces mental relaxation, composure, and inner security.",
+            "Sheetali Pranayama (Cooling Breath): Reduces mental and emotional excitation and induces tranquillity.",
+            "Bhramari Pranayama (Humming Bee Breath): Calms the mind and soothes the nervous system.",
+            "Jala Neti (Nasal Cleansing with Water): Has a calming influence on the brain, alleviating anxiety and anger.",
+            "Jalandhara Bandha (Throat Lock): Produces mental relaxation, relieving stress and anxiety.",
             "Agnisara Kriya (Activating the Digestive Fire): Alleviates depression, dullness, and lethargy.",
-            "Kunjal Kriya (Vomiting Water): Helps to release pent-up emotions and emotional blocks or feelings of heaviness in the heart.",
-            "Trataka (Concentrated Gazing): Balances the nervous system, relieving nervous tension.",
-            "Unmani Mudra: Calms stress and agitation, induces a meditative state.",
-            "Yoga Mudra (Attitude of Psychic Union): Relieves anger and tension, inducing tranquillity."
+            "Kunjal Kriya (Vomiting Water): Helps to release pent-up emotions and emotional blocks.",
+            "Trataka (Concentrated Gazing): Balances the nervous system, relieving nervous tension."
         ],
         "Contra-indications": [
             "Nasikagra Drishti: People suffering from depression should avoid this practice.",
-            "Kaki Mudra: People suffering from depression should avoid this practice.",
-            "Shanmukhi Mudra: People suffering from depression should avoid this practice.",
             "Surya Bheda Pranayama: Not for anxiety."
         ]
     },
-    "Asthma / Bronchitis / Lung Ailments / Respiratory Disorders": {
-        "Benefits": [
-            "Makarasana (Crocodile Pose): Asthmatics and people with other lung ailments should practice regularly with breath awareness as it allows more air to enter the lungs.",
-            "Padmasana (Lotus Pose): Breath becomes slow.",
+    "Asthma / Respiratory Disorders": {
+        "Beneficial": [
+            "Makarasana (Crocodile Pose): Allows more air to enter the lungs; should be practiced regularly by asthmatics.",
             "Ushtrasana (Camel Pose): Helpful for people suffering from asthma.",
-            "Supta Vajrasana (Sleeping Thunderbolt Pose): Chest is stretched and expanded to full capacity, beneficial for asthma, bronchitis, and other lung ailments.",
+            "Supta Vajrasana (Sleeping Thunderbolt Pose): Expands the chest to full capacity, beneficial for asthma and bronchitis.",
             "Matsyasana (Fish Pose): Very good for asthma and bronchitis as it encourages deep respiration.",
-            "Shankhaprakshalana: Helps prevent and manage respiratory tract diseases.",
-            "Vastra Dhauti (Cloth Cleansing): Loosens and expels mucus from the chest, relaxes bronchial tubes, improving respiratory functions.",
-            "Kapalbhati Pranayama: Cleansing effect on lungs, good for respiratory disorders.",
+            "Vastra Dhauti (Cloth Cleansing): Loosens and expels mucus from the chest and relaxes bronchial tubes.",
+            "Kapalbhati Pranayama: Has a cleansing effect on the lungs and is good for respiratory disorders.",
             "Nadi Shodhana Pranayama: Helps people with respiratory problems such as asthma, emphysema, and bronchitis."
         ],
         "Contra-indications": [
             "Sarvangasana (Shoulder Stand Pose): Not for severe asthma.",
-            "Moordhasana (Crown-Based Pose): Not for severe asthma.",
-            "Nadi Shodhana Pranayama (Technique 3, Stage 2): Not recommended for asthmatics.",
             "Sheetali Pranayama (Cooling Breath): Not for respiratory disorders such as asthma, bronchitis, and excessive mucous.",
-            "Bhastrika Pranayama (Bellows Breath): Elderly or those suffering from lung diseases like asthma or chronic bronchitis only under competent teacher."
+            "Bhastrika Pranayama (Bellows Breath): Practice only under a competent teacher if suffering from lung diseases like asthma."
         ]
     },
-    "Back Problems / Backache / Stiffness of Back / Slipped Disc / Sciatica": {
-        "Benefits": [
-            "Pawanmuktasana Part 2 (Digestive/Abdominal Group): Strengthens lower back muscles.",
-            "Supta Pawanmuktasana (Leg Lock Pose): Strengthens lower back muscles, loosens spinal vertebrae.",
+    "Back Problems / Sciatica": {
+        "Beneficial": [
+            "Supta Pawanmuktasana (Leg Lock Pose): Strengthens lower back muscles and loosens spinal vertebrae.",
             "Shava Udarakarshanasana (Universal Spinal Twist): Relieves tightness and tiredness, especially in the lower back.",
-            "Pawanmuktasana Part 3 (Shakti Bandha Asanas): Useful for a stiff back.",
-            "Gatyatmak Meru Vakrasana (Dynamic Spinal Twist): Removes stiffness of the back, increases flexibility of the spine.",
-            "Nauka Sanchalanasana (Rowing the Boat): Positive effect on pelvis and abdomen, releases energy blockages.",
-            "Vayu Nishkasana (Wind Releasing Pose): Equal stretch to the whole spine.",
-            "Udarakarshanasana (Abdominal Stretch Pose): Compresses and stretches the organs and muscles of the abdominal region.",
-            "Relaxation Asanas (General): Very relaxing to the spine and related structures, especially recommended for any back/spinal problem.",
+            "Gatyatmak Meru Vakrasana (Dynamic Spinal Twist): Removes stiffness of the back and increases spine flexibility.",
             "Advasana (Reversed Corpse Pose): Recommended for slipped disc.",
-            "Jyestikasana (Superior Posture): Helpful for all spinal complaints.",
-            "Makarasana (Crocodile Pose): Very effective for slipped disc, sciatica, and certain types of lower back pain. Releases compression of spinal nerves.",
-            "Matsya Kridasana (Flapping Fish Pose): Relieves sciatic pain by relaxing the nerves in the legs.",
-            "Vajrasana (Thunderbolt Pose): Best meditation asana for people suffering from sciatica.",
-            "Marjari-asana (Cat Stretch Pose): Improves flexibility of neck, shoulders, and spine. Gently tones female reproductive system, giving relief from menstrual cramps. Safe during pregnancy (avoid forceful abdominal contraction).",
-            "Vyaghrasana (Tiger Pose): Exercises and loosens the back by bending it alternately, tones spinal nerves. Relaxes sciatic nerves, relieving sciatica, and loosens hip joints.",
-            "Shashankasana (Pose of the Moon or Hare Pose): Stretches and strengthens back muscles, separates individual vertebrae, releasing pressure on discs, which helps relieve backache in some cases.",
-            "Standing Asanas (General): Stretching and strengthening effect on the back, shoulders, and leg muscles. Useful for those who sit a lot or have back stiffness/pain. Improve posture.",
-            "Bandha Hasta Utthanasana (Locked Hand Raising Pose): Removes stiffness from shoulders and upper back.",
-            "Akama Dhanurasana (Bow and Arrow Pose): Uses short and deep muscles of neck and shoulder blades, relaxing them. Helpful for bad posture, cervical spondylitis, shoulder/arm stiffness.",
-            "Tadasana (Palm Tree Pose): Entire spine is stretched and loosened, helping to clear congestion of spinal nerves.",
-            "Kati Chakrasana (Waist Rotating Pose): Tones neck, shoulders, waist, back, and hips. Useful for correcting back stiffness and postural problems.",
-            "Meru Prishthasana (Spine and Back Pose): Stretches the spine, tones back muscles, redistributes excess weight from waistline.",
-            "Backward Bending Asanas (General): Tone and strengthen muscles controlling the spine. Spinal nerves are decompressed, with beneficial repercussions throughout the body. Correct postural defects and neuromuscular imbalances of the vertebral column.",
-            "Bhujangasana (Cobra Pose): Helps remove backache and keep the spine supple and healthy.",
-            "Sarpasana (Snake Pose): Same benefits as bhujangasana; corrects posture (particularly rounded shoulders), profound strengthening effect on back muscles.",
-            "Ardha Shalabhasana (Half Locust Pose): Excellent asana for the back.",
-            "Shalabhasana (Locust Pose): Strengthens lower back, provides relief from backache, mild sciatica, and slipped disc (if not serious).",
-            "Saral Dhanurasana (Easy Bow Pose): Useful for lower back pain due to slipped disc or cervical spondylitis (if no discomfort).",
-            "Dhanurasana (Bow Pose): Spinal column is realigned, ligaments, muscles, and nerves activated, removing stiffness. Helps correct hunching of upper back.",
-            "Kandharasana (Shoulder Pose): May be used to realign the spine, eliminating rounded shoulders and relieving backache.",
-            "Ardha Chandrasana (Half Moon Pose): Limbers and strengthens entire skeletal structure. Gives good stretch to neck, shoulders, back, and chest, releasing congestion.",
-            "Utthan Pristhasana (Lizard Pose): Exercises and strengthens chest and diaphragm, tones entire back.",
-            "Gomukhasana (Cow's Face Pose): Relieves backache, sciatica, rheumatism, and general stiffness in shoulders and neck, improves posture.",
-            "Forward Bending Asanas (General): Loosen up the back, maintaining good health and increasing vitality. Separate vertebrae, stimulating nerves, improving circulation around spine, nourishing spinal cord. Make back muscles supple and strong.",
-            "Janu Sirshasana (Head to Knee Pose): Stretches the back, pelvic region, insides of thighs, and opens hip joints. Balances nervous system.",
-            "Paschimottanasana (Back Stretching Pose): Stimulates circulation to the nerves and muscles of the spine.",
-            "Pada Prasar Paschimottanasana (Legs Spread Back Stretch Pose): Gives extended stretch to inside of legs and muscles under/between shoulder blades. Effect distributed through upper/lower body.",
-            "Hasta Pada Angushthasana (Finger to Toe Stretch): Proper development and shaping of pelvis in young girls. Reduces excess weight on hips/thighs.",
-            "Meru Akarshanasana (Spinal Bending Pose): Stretches muscles of sides of body, making them stronger and more flexible. Reduces weight on hips/thighs.",
-            "Padahastasana (Hand to Foot Pose) (Standing): Spinal nerves stimulated and toned. Dynamic form helps remove excess weight.",
-            "Sirsha Angustha Yogasana (Head to Toe Pose): Provides lateral stretch to body.",
-            "Eka Padottanasana (One Leg Raised to Head Pose): Strengthens thigh and back muscles.",
-            "Spinal Twisting Asanas (General): Exercise muscles, make spinal column more flexible, stimulate spinal nerves.",
-            "Meru Wakrasana (Spinal Twist): Stretches the spine, loosening vertebrae, toning nerves. Alleviates backache, neck pain, lumbago, and mild forms of sciatica.",
-            "Bhu Namanasana (Spinal Twist Prostration Pose): Stretches spine and lower back, making muscles supple and stimulating nerves.",
-            "Ardha Matsyendrasana (Half Spinal Twist): Tones nerves of spine, makes back muscles supple, relieves lumbago and muscular spasms, reduces tendency of inflammatory problems/calcium deposits between vertebrae.",
-            "Parivrtta Janu Sirasana (Revolved Head to Knee Pose): Lateral stretch to the body, stretches hamstrings and behind shoulders.",
-            "Inverted Asanas (General): Alleviate strain on back. Blood and lymph from lower limbs, pelvis, and abdomen are drained back to heart.",
-            "Advasana (Reversed Corpse Pose): For slipped disc.",
-            "Jyestikasana (Superior Posture): Helpful for all spinal complaints, especially cervical spondylitis and stiff neck or upper back.",
             "Makarasana (Crocodile Pose): Very effective for slipped disc, sciatica, and certain types of lower back pain.",
-            "Vipareeta Karani Asana (Inverted Pose): Gives similar benefits to Sarvangasana with less pressure on the neck.",
-            "Pashinee Mudra (Folded Psychic Attitude): Stretches spine and back muscles, stimulates all spinal nerves.",
-            "Moola Bandha (Perineum Contraction): Tones uro-genital and excretory systems. Helpful in psychosomatic and degenerative illnesses. Relieves depression and promotes good health. Realigns physical, mental and psychic bodies.",
-            "Sirshapada Bhumi Sparshasana (Head and Foot Touching the Ground Pose): Makes back muscles strong and supple. Stimulates spinal nerves and blood circulation."
+            "Matsya Kridasana (Flapping Fish Pose): Relieves sciatic pain by relaxing the nerves in the legs.",
+            "Marjari-asana (Cat Stretch Pose): Improves flexibility of the neck, shoulders, and spine.",
+            "Vyaghrasana (Tiger Pose): Relaxes the sciatic nerves, relieving sciatica.",
+            "Shashankasana (Pose of the Moon): Stretches back muscles and separates vertebrae, releasing pressure on discs.",
+            "Bhujangasana (Cobra Pose): Helps remove backache and keeps the spine supple.",
+            "Shalabhasana (Locust Pose): Strengthens the lower back and provides relief from backache, mild sciatica, and slipped disc.",
+            "Dhanurasana (Bow Pose): Realigns the spinal column and removes stiffness.",
+            "Gomukhasana (Cow's Face Pose): Relieves backache, sciatica, and general stiffness in shoulders and neck.",
+            "Meru Wakrasana (Spinal Twist): Alleviates backache, neck pain, lumbago, and mild forms of sciatica.",
+            "Ardha Matsyendrasana (Half Spinal Twist): Makes back muscles supple and relieves lumbago and muscular spasms."
         ],
         "Contra-indications": [
             "Pawanmuktasana Part 2 (Digestive/Abdominal Group): Not for serious back conditions such as sciatica and slipped disc.",
-            "Padotthanasana (Raised Legs Pose): Not for serious back conditions such as sciatica and slipped disc.",
-            "Padachakrasana (Leg Rotation): Not for serious back conditions such as sciatica and slipped disc.",
-            "Pada Sanchalanasana (Cycling): Not for serious back conditions such as sciatica and slipped disc.",
-            "Supta Pawanmuktasana (Leg Lock Pose): Not for serious back conditions such as sciatica and slipped disc.",
-            "Jhulana Lurhakanasana (Rocking and Rolling): Not for serious back conditions. Use a folded blanket to protect the spine.",
             "Gatyatmak Meru Vakrasana (Dynamic Spinal Twist): People with back conditions should avoid this asana.",
-            "Vayu Nishkasana (Wind Releasing Pose): Not for knee problems or sciatica.",
-            "Udarakarshanasana (Abdominal Stretch Pose): Not for knee problems or sciatica.",
-            "Meditation Asanas (General): Knee is a delicate joint, be careful not to strain it.",
-            "Sukhasana (Easy Pose): Not for sciatica or knee problems.",
-            "Padmasana (Lotus Pose): Not for sciatica or weak/injured knees.",
-            "Siddhasana (Accomplished Pose for Men) / Siddha Yoni Asana (Accomplished Pose for Women): Not for sciatica or sacral infections.",
-            "Swastikasana (Auspicious Pose): Not for sciatica or sacral infections.",
-            "Vajrasana Group: Not advisable in osteoarthritis.",
-            "Ushtrasana (Camel Pose): Not for severe back ailments such as lumbago without competent teacher.",
-            "Supta Vajrasana (Sleeping Thunderbolt Pose): Not for neck problems, sciatica, slipped disc, sacral ailments, or knee complaints.",
-            "Standing Asanas (General): Those who suffer from sciatica or slipped disc may practice Hasta Utthanasana, Akama Dhanurasana, and Tadasana, but not other standing asanas except under competent teacher.",
-            "Tiryaka Kati Chakrasana (Swaying Waist Rotating Pose): Strenuous, not for back problems, slipped disc, or sciatica.",
-            "Meru Prishthasana (Spine and Back Pose): People with stiff backs or backache should avoid.",
-            "Yogamudrasana (Psychic Union Pose): Not for serious back conditions.",
-            "Matsyasana (Fish Pose): Not for back conditions.",
-            "Forward Bending Asanas (General): People with any kind of back condition and backache should consult a doctor.",
-            "Janu Sirshasana (Head to Knee Pose): Lower back conditions should only bend as far as comfortable.",
-            "Paschimottanasana (Back Stretching Pose): Not for slipped disc, sciatica, or hernia.",
-            "Gatyatmak Paschimottanasana (Dynamic Back Stretch Pose): Strenuous, not for any back problem.",
-            "Pada Prasar Paschimottanasana (Legs Spread Back Stretch Pose): As for paschimottanasana.",
-            "Meru Akarshanasana (Spinal Bending Pose): Not for slipped disc, sciatica, or cervical spondylitis.",
-            "Padahastasana (Hand to Foot Pose) (Standing): Not for serious back complaints, sciatica, or abdominal hernia.",
-            "Sirsha Angustha Yogasana (Head to Toe Pose): Not for back conditions such as slipped disc or sciatica.",
-            "Utthita Janu Sirshasana (Standing Head Between Knees Pose): People with back conditions should not practice.",
-            "Eka Padottanasana (One Leg Raised to Head Pose): Not for back complaints or displaced coccyx.",
-            "Meru Wakrasana (Spinal Twist): Not for beginners with serious back conditions.",
-            "Bhu Namanasana (Spinal Twist Prostration Pose): Not for back problems.",
+            "Udarakarshanasana (Abdominal Stretch Pose): Not for sciatica.",
+            "Padmasana (Lotus Pose): Not for sciatica.",
+            "Supta Vajrasana (Sleeping Thunderbolt Pose): Not for sciatica or slipped disc.",
+            "Paschimottanasana (Back Stretching Pose): Not for slipped disc or sciatica.",
+            "Padahastasana (Hand to Foot Pose): Not for serious back complaints or sciatica.",
             "Ardha Matsyendrasana (Half Spinal Twist): Not for sciatica or slipped disc.",
-            "Parivrtta Janu Sirasana (Revolved Head to Knee Pose): Not for back complaints.",
-            "Inverted Asanas (General): Not for back conditions, especially slipped disc. Those with cervical problems should not practice postures where the neck is weight-bearing.",
-            "Sarvangasana (Shoulder Stand Pose): Not for cervical spondylitis, slipped disc, or weak spine.",
-            "Moordhasana (Crown-Based Pose): Not for weak neck or slipped disc, weak spine.",
-            "Padma Sarvangasana (Shoulder Stand Lotus Pose): Not for cervical spondylitis, slipped disc.",
-            "Poorwa Halasana (Preliminary Plough Pose): Not for sciatica or slipped disc.",
-            "Halasana (Plough Pose): Not for slipped disc, sciatica, or any serious back problem, especially arthritis of the neck.",
-            "Druta Halasana (Dynamic Plough Pose): Not for sciatica or other back or neck ailments.",
-            "Koormasana (Tortoise Pose): Not for slipped disc, sciatica, or chronic arthritis.",
-            "Poorna Shalabhasana (Full Locust Pose): Not for cervical spondylitis.",
-            "Poorna Dhanurasana (Full Bow Pose): Only if back is very supple.",
-            "Dhanurakarshanasana (Archer's Pose): Not for slipped disc, sciatica, or dislocation of hip joints.",
-            "Prishthasana (Back Pose): Not for any back ailment.",
-            "Chakrasana (Wheel Pose): Not for weak back.",
-            "Grivasana (Neck Pose): Not for neck conditions like spondylitis, arthritis, slipped disc.",
-            "Shirshapada Bhumi Sparshasana (Head and Foot Touching the Ground Pose): Not for any neck condition, arthritis, slipped disc.",
-            "Poorna Matsyendrasana (Full Spinal Twist Pose): Not for sciatica or slipped disc.",
-            "Vatayanasana (Flying Horse Pose): Not for sciatica, slipped disc, weak back.",
-            "Maha Bheda Mudra (Great Separating Attitude): Not for cervical spondylosis.",
-            "Pashinee Mudra (Folded Psychic Attitude): Not for any spinal condition."
+            "Inverted Asanas (General): Not for back conditions, especially slipped disc.",
+            "Halasana (Plough Pose): Not for slipped disc, sciatica, or any serious back problem."
         ]
     },
     "Blood Pressure (High) / Hypertension": {
-        "Benefits": [
+        "Beneficial": [
             "Padmasana (Lotus Pose): Reduces blood pressure.",
             "Siddhasana / Siddha Yoni Asana: Balances blood pressure.",
-            "Bhramari Pranayama (Humming Bee Breath): Useful for people suffering from high blood pressure (slows heart rate).",
-            "Ujjayi Pranayama (Psychic Breath): Slows heart rate, useful for high blood pressure.",
+            "Bhramari Pranayama (Humming Bee Breath): Useful for high blood pressure as it slows the heart rate.",
+            "Ujjayi Pranayama (Psychic Breath): Slows the heart rate, useful for high blood pressure.",
             "Jalandhara Bandha (Throat Lock): Reduces blood pressure."
         ],
         "Contra-indications": [
-            "Pawanmuktasana Part 1 (Anti-rheumatic Group): Not for high blood pressure.",
+            "Pawanmuktasana Part 1 & 2: Not for high blood pressure.",
             "Greeva Sanchalana (Neck Movements): Not for high blood pressure.",
-            "Pawanmuktasana Part 2 (Digestive/Abdominal Group): Not for high blood pressure.",
-            "Padotthanasana (Raised Legs Pose): Not for high blood pressure.",
-            "Padachakrasana (Leg Rotation): Not for high blood pressure.",
-            "Pada Sanchalanasana (Cycling): Not for high blood pressure.",
-            "Supta Pawanmuktasana (Leg Lock Pose): Not for high blood pressure.",
             "Naukasana (Boat Pose): Not for high blood pressure.",
-            "Vayu Nishkasana (Wind Releasing Pose): Not for very high blood pressure.",
-            "Yogamudrasana (Psychic Union Pose): Not for high blood pressure.",
-            "Matsyasana (Fish Pose): Not for high blood pressure.",
             "Dhanurasana (Bow Pose): Not for high blood pressure.",
-            "Inverted Asanas (General): Not for high blood pressure.",
-            "Bhumi Pada Mastakasana (Half Headstand): Not for high blood pressure.",
-            "Sarvangasana (Shoulder Stand Pose): Not for high blood pressure.",
-            "Moordhasana (Crown-Based Pose): Not for high blood pressure.",
-            "Padma Sarvangasana (Shoulder Stand Lotus Pose): Not for high blood pressure.",
-            "Halasana (Plough Pose): Not for high blood pressure.",
-            "Druta Halasana (Dynamic Plough Pose): Not for high blood pressure.",
-            "Koormasana (Tortoise Pose): Not for very high blood pressure.",
-            "Poorna Shalabhasana (Full Locust Pose): Not for high blood pressure.",
-            "Poorna Dhanurasana (Full Bow Pose): Not for high blood pressure.",
-            "Prishthasana (Back Pose): Not for high blood pressure.",
-            "Chakrasana (Wheel Pose): Not for high blood pressure.",
-            "Grivasana (Neck Pose): Not for high blood pressure.",
-            "Shirshapada Bhumi Sparshasana (Head and Foot Touching the Ground Pose): Not for high blood pressure.",
-            "Eka Pada Sirasana (One Foot to Head Pose): Not for high blood pressure.",
-            "Utthan Eka Pada Sirasana (Standing Foot to Head Pose): Not for high blood pressure.",
-            "Mayurasana (Peacock Pose): Not for high blood pressure.",
-            "Maha Mudra (Great Psychic Attitude): Not for high blood pressure.",
-            "Maha Bheda Mudra (Great Separating Attitude): Not for high blood pressure.",
-            "Maha Vedha Mudra (Great Piercing Attitude): Not for high blood pressure.",
-            "Jalandhara Bandha (Throat Lock): Not for high blood pressure.",
-            "Uddiyana Bandha (Abdominal Contraction): Not for high blood pressure.",
-            "Maha Bandha (The Great Lock): Not for high or low blood pressure.",
-            "Shankhaprakshalana: Not for high blood pressure.",
-            "Agnisara Kriya: Not for high blood pressure.",
-            "Kunjal Kriya: Not for high blood pressure.",
-            "Vastra Dhauti: Not for hypertension.",
-            "Nauli: Not for hypertension, high blood pressure.",
-            "Trataka (Concentrated Gazing): Not for high blood pressure.",
+            "Inverted Asanas (General): Not for high blood pressure. This includes Sarvangasana (Shoulder Stand) and Halasana (Plough Pose).",
             "Surya Namaskara: Not for high blood pressure.",
             "Surya Bheda Pranayama (Vitality Stimulating Breath): Not for hypertension.",
-            "Moorchha Pranayama (Swooning or Fainting Breath): Not for high blood pressure.",
             "Bhastrika Pranayama (Bellows Breath): Not for high blood pressure.",
-            "Kapalbhati Pranayama (Frontal Brain Cleansing Breath): Not for high blood pressure.",
-            "Setu Asana (Bridge Pose): Not for high blood pressure.",
-            "Santolanasana (Balancing Pose) Variations: Not for high blood pressure.",
-            "Bakasana (Crane Pose): Not for high blood pressure.",
-            "Utthan Eka Pada Sirasana: Not for high blood pressure."
+            "Kapalbhati Pranayama (Frontal Brain Cleansing Breath): Not for high blood pressure."
         ]
     },
     "Blood Pressure (Low)": {
-        "Benefits": [
+        "Beneficial": [
             "Sarvangasana (Shoulder Stand Pose): Helps in cases of low blood pressure.",
             "Moordhasana (Crown-Based Pose): Helps in cases of low blood pressure."
         ],
         "Contra-indications": [
             "Greeva Sanchalana (Neck Movements): Not for low blood pressure.",
             "Sheetali Pranayama (Cooling Breath): Not for low blood pressure.",
-            "Kaki Mudra (Crow's Beak): Not for low blood pressure.",
-            "Maha Bandha (The Great Lock): Not for high or low blood pressure."
+            "Maha Bandha (The Great Lock): Not for low blood pressure."
         ]
     },
-    "Cardiac Problems / Heart Conditions / Coronary Artery Disease": {
-        "Benefits": [
-            "Pawanmuktasana Part 1 (Anti-rheumatic Group): Excellent for heart problems.",
-            "Bandha Hasta Utthanasana (Locked Hand Raising Pose): Influences heart and improves blood circulation."
+    "Constipation": {
+        "Beneficial": [
+            "Pawanmuktasana Part 2 (Digestive/Abdominal Group): Excellent for constipation.",
+            "Supta Pawanmuktasana (Leg Lock Pose): Very effective in removing constipation.",
+            "Nauka Sanchalanasana (Rowing the Boat): Removes constipation.",
+            "Udarakarshanasana (Abdominal Stretch Pose): Relieves constipation.",
+            "Shashankasana (Pose of the Moon): Regular practice relieves constipation.",
+            "Yogamudrasana (Psychic Union Pose): Excellent for removing constipation.",
+            "Matsyasana (Fish Pose): To remove constipation, drink 3 glasses of water and then perform this asana.",
+            "Padahastasana (Hand to Foot Pose) (Standing): Alleviates flatulence, constipation, and indigestion.",
+            "Agnisara Kriya (Activating the Digestive Fire): Massages the abdomen and encourages optimum health of abdominal organs.",
+            "Halasana (Plough Pose): Activates digestion, relieving constipation and dyspepsia."
         ],
         "Contra-indications": [
-            "Pawanmuktasana Part 1 (Anti-rheumatic Group): Not for heart problems.",
-            "Greeva Sanchalana (Neck Movements): Not for heart problems.",
-            "Pawanmuktasana Part 2 (Digestive/Abdominal Group): Not for serious heart conditions.",
-            "Pada Sanchalanasana (Cycling - Stage 2): Not for heart conditions.",
-            "Yogamudrasana (Psychic Union Pose): Not for serious heart conditions.",
-            "Matsyasana (Fish Pose): Not for heart disease.",
-            "Dhanurasana (Bow Pose): Not for a weak heart, coronary thrombosis.",
-            "Inverted Asanas (General): Not for heart conditions.",
-            "Sarvangasana (Shoulder Stand Pose): Not for heart conditions.",
-            "Moordhasana (Crown-Based Pose): Not for heart conditions.",
-            "Padma Sarvangasana (Shoulder Stand Lotus Pose): Not for heart ailments.",
-            "Halasana (Plough Pose): Not for heart disease.",
-            "Druta Halasana (Dynamic Plough Pose): Not for heart ailments.",
-            "Poorna Shalabhasana (Full Locust Pose): Not for a weak heart, coronary thrombosis.",
-            "Poorna Dhanurasana (Full Bow Pose): Not for a weak heart, high blood pressure, or coronary thrombosis.",
-            "Prishthasana (Back Pose): Not for coronary thrombosis.",
-            "Chakrasana (Wheel Pose): Not for any illness, weak wrists, weak back, or feeling generally tired.",
-            "Grivasana (Neck Pose): Not for coronary diseases.",
-            "Shirshapada Bhumi Sparshasana (Head and Foot Touching the Ground Pose): Not for heart conditions.",
-            "Mayurasana (Peacock Pose): Not for any heart ailment.",
-            "Brahmacharyasana: Not for heart ailments.",
-            "Maha Mudra (Great Psychic Attitude): Not for heart complaints.",
-            "Maha Bheda Mudra (Great Separating Attitude): Not for heart complaints.",
-            "Maha Vedha Mudra (Great Piercing Attitude): Not for heart problems.",
-            "Jalandhara Bandha (Throat Lock): Not for heart disease.",
-            "Uddiyana Bandha (Abdominal Contraction): Not for heart disease.",
-            "Maha Bandha (The Great Lock): Not for heart conditions.",
-            "Shankhaprakshalana: Not for heart problems.",
-            "Kunjal Kriya (Vomiting Water): Not for heart disease.",
-            "Vastra Dhauti (Cloth Cleansing): Not for heart disease.",
-            "Nauli: Not for heart disease.",
-            "Surya Namaskara: Not for coronary artery diseases.",
-            "Sheetali Pranayama (Cooling Breath): Those with heart disease should practice without breath retention.",
-            "Bhramari Pranayama (Humming Bee Breath): Slows down heart rate.",
-            "Bhastrika Pranayama (Bellows Breath): Not for heart disease.",
-            "Kapalbhati Pranayama (Frontal Brain Cleansing Breath): Not for heart disease.",
-            "Moorchha Pranayama (Swooning or Fainting Breath): Not for heart disease.",
-            "Surya Bheda Pranayama (Vitality Stimulating Breath): Not for heart disease.",
-            "Ujjayi Pranayama (Psychic Breath): Not for heart disease if combining bandhas or breath retention.",
-            "Setu Asana (Bridge Pose): Not for heart disease.",
-            "Santolanasana (Balancing Pose) Variations: Not for heart conditions.",
-            
+            "Sheetali Pranayama (Cooling Breath): Those suffering from chronic constipation should avoid it.",
+            "Inverted Asanas (Sirshasana, Sarvangasana): Not for chronic constipation.",
+            "Nauli: Contra-indicated for constipation."
+        ]
+    },
+    "Diabetes": {
+        "Beneficial": [
+            "Pawanmuktasana Part 2 (Digestive/Abdominal Group): Excellent for diabetes.",
+            "Dhanurasana (Bow Pose): Useful for the management of diabetes.",
+            "Koormasana (Tortoise Pose): Helpful in managing diabetes.",
+            "Mayurasana (Peacock Pose): Useful in managing diabetes.",
+            "Utthita Janu Sirshasana (Standing Head Between Knees Pose): Stimulates the pancreas.",
+            "Ardha Matsyendrasana (Half Spinal Twist): Regulates secretions of the pancreas.",
+            "Halasana (Plough Pose): Promotes insulin production by the pancreas."
+        ],
+        "Contra-indications": [
+            "Kunjal Kriya (Vomiting Water): Not for diabetics with eye problems.",
+            "Shambhavi Mudra: Those with diabetic retinopathy should not perform without a competent teacher.",
+            "Nasikagra Drishti: Those with diabetic retinopathy should not perform without a competent teacher."
+        ]
+    },
+    "Fatigue / Lethargy": {
+        "Beneficial": [
+            "Goolf Chakra (Ankle Rotation): Relieves tiredness.",
+            "Poorna Titali Asana (Full Butterfly): Removes tiredness from long hours of standing and walking.",
+            "Shavasana (Corpse Pose): Refreshes the body and mind.",
+            "Gomukhasana (Cow's Face Pose): Alleviates tiredness.",
+            "Uddiyana Bandha (Abdominal Contraction): Removes lethargy.",
+            "Agnisara Kriya (Activating the Digestive Fire): Alleviates dullness and lethargy.",
+            "Kapalbhati Pranayama (Frontal Brain Cleansing Breath): Removes sleepiness."
+        ],
+        "Contra-indications": [
+            "Chakrasana (Wheel Pose): Do not practice when feeling generally tired."
+        ]
+    },
+    "Menstrual Problems / Gynaecological Disorders": {
+        "Beneficial": [
+            "Pawanmuktasana Part 3 (Shakti Bandha Asanas): Especially useful for menstrual problems and toning pelvic organs.",
+            "Chakki Chalanasana (Churning the Mill): Very useful for regulating the menstrual cycle and excellent for postnatal recovery.",
+            "Nauka Sanchalanasana (Rowing the Boat): Especially useful for gynaecological disorders and postnatal recovery.",
+            "Vajrasana (Thunderbolt Pose): Alleviates menstrual disorders.",
+            "Marjari-asana (Cat Stretch Pose): Gently tones the female reproductive system, giving relief from menstrual cramps.",
+            "Vyaghrasana (Tiger Pose): Tones female reproductive organs, especially beneficial after childbirth.",
+            "Dhanurasana (Bow Pose): Useful for the management of menstrual disorders.",
+            "Kandharasana (Shoulder Pose): Tones female reproductive organs and is useful for managing menstrual disorders and prolapse.",
+            "Moola Bandha (Perineum Contraction): Tones the uro-genital system."
+        ],
+        "Contra-indications": [
+            "Surya Namaskara: Avoid during the onset of menstruation.",
+            "Inverted Asanas (General): Women should not practice inverted postures during menstruation or pregnancy.",
+            "Uddiyana Bandha (Abdominal Contraction): Should be avoided during pregnancy.",
+            "Moola Bandha (Perineum Contraction): Do not practice during menstruation.",
+            "Nauli: Pregnant women should not practice. However, it can help strengthen muscles six months after childbirth."
+        ]
+    }
+}
+
+# --- Utility Function ---
+def format_recommendation(text):
+    """
+    Bolds the name of the asana or practice in a given string for better display.
+    It looks for a colon or an opening parenthesis as a separator.
+    """
+    match = re.search(r'(:|\s\()', text)
+    if match:
+        index = match.start()
+        asana_name = text[:index].strip()
+        description = text[index:]
+        return f"**{asana_name}**{description}"
+    return text
+
+# --- Streamlit App ---
+
+st.set_page_config(page_title="Yoga Asana Recommender", layout="wide")
+
+st.title("🧘 Yoga Asana Recommender")
+st.markdown("Select a health condition to see recommended yoga practices and contra-indications.")
+
+# Create a list of conditions for the dropdown menu
+conditions = ["-- Select a Condition --"] + list(yoga_data.keys())
+selected_condition = st.selectbox(
+    "Choose your area of focus:",
+    options=conditions,
+    index=0
+)
+
+st.write("---")
+
+if selected_condition != "-- Select a Condition --":
+    data = yoga_data[selected_condition]
+    beneficial = data.get("Beneficial", [])
+    contra = data.get("Contra-indications", [])
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.subheader("✅ Recommended Practices")
+        if beneficial:
+            for item in beneficial:
+                st.markdown(f"- {format_recommendation(item)}")
+        else:
+            st.info("No specific beneficial practices are listed for this condition.")
+
+    with col2:
+        st.subheader("❌ Practices to Avoid")
+        if contra:
+            for item in contra:
+                st.markdown(f"- {format_recommendation(item)}")
+        else:
+            st.info("No specific contra-indications are listed for this condition.")
+
+st.write("---")
+st.warning(
+    "**Disclaimer:** The information provided by this application is for general informational purposes only. "
+    "It is not a substitute for professional medical advice. Always consult with a qualified healthcare provider and a "
+    "certified yoga instructor before beginning any new exercise program, especially if you have pre-existing health conditions."
+)
